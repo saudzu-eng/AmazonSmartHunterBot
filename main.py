@@ -9,16 +9,17 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 # التوكن الخاص بك للتشغيل المباشر
 TOKEN = "8759675007:AAF6VKC2ra2-PDJcDiNbEAK4HyBlNNDhyN4"
 
-# معرف التليجرام الخاص بك (سيتم إرسال العروض التلقائية لك هنا، أو يمكنك وضع معرف قناتك العامة)
+# معرف التليجرام الخاص بك كمسؤول عن البوت
 ADMIN_ID = 1149146249
 
 # كود التسويق بالعمولة الخاص بك
 AFFILIATE_TAG = "telegram0e26c-21"
 
+# رسالة الترحيب الاحترافية والمصاغة بأسلوب تسويقي مميز
 WELCOME_TEXT = (
-    "🚀 **مرحباً بك في بوت صائد أمازون الذكي!**\n\n"
-    "• تصفح الأقسام بالأسفل للوصول إلى العروض فوراً، أو اكتب اسم أي منتج مباشرة وسأبحث لك عنه بالمعلومات والصور الحقيقية!\n"
-    "• 🔥 **تم تفعيل نظام قنص العروض التلقائي بنجاح!** سأقوم بإرسال أقوى الصفقات لك هنا بانتظام."
+    "🚀 **مرحباً بك في منصة التسوّق الذكي وعروض أمازون الحصرية!**\n\n"
+    "• اكتشف أقوى التخفيضات اليومية المتجددة عبر تصفح الأقسام بالأسفل.\n"
+    "• أو اكتب **إسم أي منتج** تريده مباشرة، وسأقوم بقنص أفضل سعر متوفر بالمعلومات والصور الحقيقية فوراً!"
 )
 
 MAIN_KEYBOARD = [
@@ -41,7 +42,6 @@ MARKETING_PHRASES = [
     "🛍️ **صيد اليوم الحصري! لقطة مميزة جداً وتستحق التجربة فوراً.** 🚚"
 ]
 
-# كلمات مفتاحية عشوائية ليتنقل البوت بينها عند قنص العروض التلقائية لضمان التنوع
 AUTO_SEARCH_KEYWORDS = ["ساعة ذكية", "شاشة قيمنق", "سماعات لاسلكية", "ماكينة قهوة", "عطور رجالية", "جوال سامسونج", "حقيبة ظهر"]
 
 def fetch_amazon_product(query):
@@ -79,25 +79,22 @@ def fetch_amazon_product(query):
     except Exception:
         return None
 
-# دالة النشر التلقائي الدورية
 async def auto_post_deal(context: ContextTypes.DEFAULT_TYPE):
-    # اختيار كلمة عشوائية للبحث عن عروضها ونشرها
     random_keyword = random.choice(AUTO_SEARCH_KEYWORDS)
     product_data = fetch_amazon_product(random_keyword)
     
     if product_data:
         caption_text = (
-            f"📢 **[عرض تلقائي حصري]**\n"
-            f"🔥 **قناص البوت عثر على صفقة مميزة رائعة الآن!**\n\n"
+            f"📢 **[أقوى العروض الحالية]**\n"
+            f"🔥 **صفقة مميزة عثرت عليها المنصة لك الآن!**\n\n"
             f"📦 **اسم المنتج:** {product_data['title']}\n"
             f"🏭 **البراند:** {product_data['brand']}\n"
             f"📝 **التفاصيل:** {product_data['description']}\n\n"
-            f"🛒 **اشتريه الآن برابط الخصم المباشر الخاص بك:**\n{product_data['url']}"
+            f"🛒 **تسوق العرض مباشرة شامل الخصم التلقائي:**\n{product_data['url']}"
         )
         inline_keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔗 اضغط هنا للانتقال للعرض مباشرة", url=product_data['url'])]])
         
         try:
-            # إرسال العرض التلقائي لحسابك كأدمن (أو قناتك)
             await context.bot.send_photo(chat_id=ADMIN_ID, photo=product_data['image'], caption=caption_text, parse_mode="Markdown", reply_markup=inline_keyboard)
         except Exception as e:
             print(f"Failed to auto post: {e}")
@@ -106,7 +103,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     reply_markup = ReplyKeyboardMarkup(MAIN_KEYBOARD, resize_keyboard=True)
     if user_id == ADMIN_ID:
-        await update.message.reply_text("👑 **مرحباً بك يا مدير البوت الموقر!**\n\n" + WELCOME_TEXT, parse_mode="Markdown", reply_markup=reply_markup)
+        await update.message.reply_text("👑 **مرحباً بك يا مدير المنصة الموقر!**\n\n" + WELCOME_TEXT, parse_mode="Markdown", reply_markup=reply_markup)
     else:
         await update.message.reply_text(WELCOME_TEXT, parse_mode="Markdown", reply_markup=reply_markup)
 
@@ -156,15 +153,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     application = Application.builder().token(TOKEN).build()
 
-    # تفعيل المجدول الزمني للوظائف التلقائية
     job_queue = application.job_queue
-    # إعداد إرسال العروض التلقائية: يتم إرسال أول عرض بعد 10 ثوانٍ من إقلاع البوت، ثم يتكرر تلقائياً كل ساعتين (7200 ثانية)
     job_queue.run_repeating(auto_post_deal, interval=7200, first=10)
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("🚀 البوت يعمل الآن بنظام الكشط اليدوي + قنص العروض التلقائي الدوري بنجاح...")
+    print("🚀 البوت المحدث يعمل الآن بأسلوب ترحيبي احترافي...")
     application.run_polling()
 
 if __name__ == "__main__":
