@@ -2,10 +2,10 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# نسخ جميع ملفات المشروع إلى مجلد /app الحالي
-COPY . /app
+# تثبيت المكتبات مباشرة بالأسماء دون الحاجة لملف requirements.txt
+RUN pip install --no-cache-dir python-telegram-bot==21.3 apscheduler==3.10.4 beautifulsoup4==4.12.3 requests==2.32.3
 
-# تشغيل التثبيت بالإشارة إلى المسار الكامل للملف لضمان قراءته
-RUN pip install --no-cache-dir -r /app/requirements.txt
+# نسخ كود البوت
+COPY bot.py /app/
 
 CMD ["python", "bot.py"]
